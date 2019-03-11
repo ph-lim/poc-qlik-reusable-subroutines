@@ -1,0 +1,38 @@
+// ****************************************************************************************
+// Subroutines used to import variables from table loaded in memory
+// @param vTableName : Name of the table containing variable definitions
+// @param vFieldVariableName : Name of the field containing the variable name
+// @param vFieldExpression  : Name of the field containing the variable expression
+// @param vDropVariableTableAfter : False() to keep the variable table after the execution
+//				    True()  to drop the variable table after the execution
+// ****************************************************************************************
+Sub SubImportVariables(vTableName, vFieldVariableName, vFieldExpression, vDropVariableTableAfter)
+  
+  // Preconditions
+  // Table, variable name field and expression field all exist
+  If IsNull(NoOfRows([vTableName])) Then
+      Call ThrowException('Error: Table "$(vTableName)" does not exist or is empty');
+  End If;
+  If FieldNumber('$(vFieldVariableName)', '$(vTableName)') = 0 Then
+  	  Call ThrowException('Error: Field "$(vFieldVariableName)" does not exist in table "$(vTableName)"');
+  End If;
+  If FieldNumber('$(vFieldExpression)', '$(vTableName)') = 0 Then
+      Call ThrowException('Error: Field "$(vFieldExpression)" does not exist in table "$(vTableName)"');
+  End If;
+  
+  // For each row of variable definition, fetch the variable name
+  // then let a new variable be equal to the expression associated
+  // on the same row
+  For vIndex = 0 To (NoOfRows('$(vTableName)') - 1)
+      Let vVariableName = Peek('$(vFieldVariableName)', vIndex, '$(vTableName)');
+      Let [$(vVariableName)] = Peek('$(vFieldExpression)', vIndex, '$(vTableName)');
+  Next;
+  Set vIndex=;
+
+  // Optionnally, drop the table
+  If vDropVariableTableAfter Then
+  	Drop Table [$(vTableName)];
+  End If;
+  Set vDropVariableTableAfter=;
+  
+End Sub;
