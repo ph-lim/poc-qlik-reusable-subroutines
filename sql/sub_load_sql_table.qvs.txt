@@ -1,0 +1,43 @@
+// *********************************************************************************************
+// Subroutine that loads from the source a given set of fields (columns) applying a given
+// condition and by default, qualifying all fields except the given one.
+//
+// @param vOwner
+// @param vTable
+// @param vColumns: List of comma-delimited fields should be loaded
+// @param vWhereCondition
+// @param vUnqualifiedFields: List of comma-delimited fields that should not be qualified
+//							  If not qualified and using sub_apply_aliases, those fields will
+//							  not be aliases.
+// *********************************************************************************************
+Sub sub_load_sql_table(vOwner, vTable, vColumns, vWhereCondition, vUnqualifiedFields)
+	
+    // Verify if there is an owner prefix
+    If(vOwner='' Or IsNull(vOwner)) Then
+    	Let vOwnerTable = '$(vTable)';
+    Else
+    	Let vOwnerTable = '$(vOwner).$(vTable)';
+    End If;
+    
+    // Qualify all fields, then unqualify the given fields if any
+    Qualify *;
+    Unqualify $(vUnqualifiedFields);
+    
+    // Load the required fields applying the where condition if any
+	If(vWhereCondition='' Or IsNull(vWhereCondition)) Then
+        [$(vTable)]:
+        SQL SELECT 
+            $(vColumns)
+        FROM $(vOwnerTable);
+    Else
+        [$(vTable)]:
+        SQL SELECT 
+            $(vColumns)
+        FROM $(vOwnerTable)
+        WHERE $(vWhereCondition);
+    End If;
+    
+    // Unqualify all future fields that will be loaded
+    Unqualify *;
+
+End Sub;
