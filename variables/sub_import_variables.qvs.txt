@@ -6,7 +6,7 @@
 // @param vDropVariableTableAfter : False() to keep the variable table after the execution
 //				    True()  to drop the variable table after the execution
 // ****************************************************************************************
-Sub SubImportVariables(vTableName, vFieldVariableName, vFieldExpression, vDropVariableTableAfter)
+Sub sub_import_variables(vTableName, vFieldVariableName, vFieldExpression, vDropVariableTableAfter)
   
   // Preconditions
   // Table, variable name field and expression field all exist

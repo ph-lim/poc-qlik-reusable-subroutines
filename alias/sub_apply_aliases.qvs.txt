@@ -1,0 +1,26 @@
+// *********************************************************************************************
+// Subroutine qui applique les alias par défaut à toutes les tables chargées.
+//
+// Cette subroutine transforme le nom des champs qualifié (précédé du nom de la table), tout
+// en majuscule, en l'alias par défaut associé.
+//
+// Par exemple, si on charge le champ EMPLOYE.NOM, et que l'alias par défaut est Employe nom,
+// alors le champ sera renommé à Employe nom. Par contre, si le champ a été aliasé avant 
+// d'appeler cette subroutine, le nom ne changera pas.
+// *********************************************************************************************
+Sub sub_apply_aliases
+
+	// Charger la table qui map le nom qualifié du champ à l'alias
+    MapRenameFields:
+    Mapping Load
+        _SourceTableName &'.'& _SourceFieldName as _SourceTableQualifiedFieldName,
+        _MasterItemSourceFieldAlias
+    From [lib://master_items (ile_ulimphi)]
+    (ooxml, embedded labels, table is QSMasterItems)
+    Where _IsCalculatedDimension = 0 
+    	And _MasterItemType = 'Dimension';
+    
+    // Utiliser la table de mapping pour renommer les champs
+    Rename Fields using MapRenameFields;
+    
+End Sub;
