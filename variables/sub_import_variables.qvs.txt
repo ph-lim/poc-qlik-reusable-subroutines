@@ -34,5 +34,8 @@ Sub sub_import_variables(vTableName, vFieldVariableName, vFieldExpression, vDrop
   	Drop Table [$(vTableName)];
   End If;
   Set vDropVariableTableAfter=;
+
+  // Reset variables
+  SET vVariableName=;
   
 End Sub;

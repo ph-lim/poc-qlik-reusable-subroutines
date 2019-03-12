@@ -40,4 +40,6 @@ Sub sub_load_sql_table(vOwner, vTable, vColumns, vWhereCondition, vUnqualifiedFi
     // Unqualify all future fields that will be loaded
     Unqualify *;
 
+    // Reset variables
+    SET vOwnerTable=;
 End Sub;
