@@ -1,81 +1,67 @@
-// ******************************************************************************************** 
-// Subroutine qui créer une table nommée Calendrier contenant les champs : 
-// - [$(vChampDateCalendrier)]
-// - Jour
-// - Mois
-// - Année
-//
-// Lors de la construction du calendrier, deux tables temporaires sont créées :
-// - TempMinMaxDates
-// - TempCalendrier
-// Il est nécessaire de s'assurer que le script ne contient pas d'autres tables portant
-// les mêmes noms lors de l'appel de la subroutine. La subroutine affichera une erreur
-// et arrêtra le script de chargement si un table portant le même nom existe.
-//
-// :param vTableMinMax: Nom de la table dans laquelle chercher les dates minimum et maximum
-// :param vDropTableMinMax: True() si on drop la table vTableMinMax, False() si on la garde
-// :param vChampDate: Nom du champ date sur laquelle on construit un calendrier
-// :param vChampDateCalendrier: Nom du champ date du calendrier
-// ********************************************************************************************
+/************************************************************************************************
+Subroutine qui crÃ©er une table de calendrier contenant les champs :
+- Date
+- Annee
+- Mois
 
-Sub sub_calendrier(vTableMinMax, vDropTableMinMax, vChampDate, vChampDateCalendrier)
-    
-    // --------------------------------------------------------------------------------------------
-    // Préconditions
-    // La subroutine ThrowException n'existe pas, c'est un moyen pour arrêter le script de
-    // chargment en affichant une erreur.
-    // --------------------------------------------------------------------------------------------
-    If Not IsNull(TableNumber('TempMinMaxDates')) Then 
-    	Call ThrowException('La table TempMinMaxDates existe déjà, mais la subroutine sub_calendrier en a besoin.');
-    ElseIf Not IsNull(TableNumber('TempCalendrier')) Then
-    	Call ThrowException('La table TempCalendrier existe déjà, mais la subroutine sub_calendrier en a besoin.');
+ParamÃ¨tres
+- vTableMinMax : Nom de la table dans laquelle trouver la plus petite et la plus grande date
+- vFieldDateMinMax : Nom du champ contenant les dates sur lesquelles construire un calendrier
+- vFieldDateKey : Alias attribuÃ© au champ contenant un Autonumber de la date dans le calendrier
+- vFieldDateSuffix : Suffixe aux alias des champs dans le calendrier 
+- vTableCalendar : Nom de la table rÃ©sultante contenant le calendrier 
+
+PrÃ©conditions
+- Une table Â« Temp Â» n'existe pas
+- Les variables vMinDate et vMaxDate ne sont pas initialisÃ©es
+
+************************************************************************************************/
+Sub sub_calendrier(vTableMinMax, vFieldDateMinMax, vFieldDateKey, vFieldDateSuffix, vTableCalendar)
+
+	// -------------------------------------------------------------------------------------------
+    // PrÃ©conditions
+    // -------------------------------------------------------------------------------------------
+    If Not IsNull(TableNumber('Temp')) Then
+    	Call ThrowException('La table Temp existe dÃ©jÃ , mais la subroutine sub_calendrier en a besoin.');
+    ElseIf Not IsNull(vMinDate) Then
+    	Call ThrowException('La variable vMinDate est initialisÃ©e, mais la subroutine sub_calendrier en a besoin.');
+    ElseIf Not IsNull(vMaxDate) Then
+    	Call ThrowException('La variable vMaxDate est initialisÃ©e mais la subroutine sub_calendrier en a besoin.');
     End If
     
-    // --------------------------------------------------------------------------------------------
-    // Chercher de la plus petite et plus grande date
-    // --------------------------------------------------------------------------------------------
-    TempMinMaxDates:
+    // -------------------------------------------------------------------------------------------
+    // GÃ©nÃ©ration du calendrier 
+    // -------------------------------------------------------------------------------------------
+    
+    // Retrouver la plus petite et la plus grande date
+    Temp:
     Load
-        Min([$(vChampDate)]) as [MinDate],
-        Max([$(vChampDate)]) as [MaxDate]
+        Min([$(vFieldDateMinMax)]) as MinDateCreation,
+        Max([$(vFieldDateMinMax)]) as MaxDateCreation
     Resident [$(vTableMinMax)];
-    
-    If '$(vDropTableMinMax)' = True() Then
-    	Drop Table [$(vTableMinMax)];
-	End If
-    
-    Let vMinDate = Num(Peek('MinDate', 0, 'TempMinMaxDates'));
-    Let vMaxDate = Num(Peek('MaxDate', 0, 'TempMinMaxDates'));
 
-    Drop Table TempMinMaxDates;
+    // Assigner la plus petite et plus grande date Ã  des variables
+    Let vMinDate = Num(Peek('MinDateCreation', 0, 'Temp'));
+    Let vMaxDate = Num(Peek('MaxDateCreation', 0, 'Temp'));
 
-    // --------------------------------------------------------------------------------------------
-    // Générer un calendrier temporaire contenant toutes les dates entre vMinDate et vMaxDate
-    // --------------------------------------------------------------------------------------------
-    TempCalendrier:
-    Load
-        $(vMinDate) + IterNo() - 1 as Num,
-        Date($(vMinDate) + IterNo() - 1) as TempDate
-    AutoGenerate 1 While $(vMinDate) + IterNo() - 1 <= $(vMaxDate);
+    // DÃ©truire la table temporaire
+    Drop Table Temp;
 
-    // --------------------------------------------------------------------------------------------
-    // Construction du calendrier maître basé sur les dates générées ci-haut
-    // Au besoin, ajouter tous autres traitements relatif aux dates nécessaire (trimestre,
-    // semaine, jour de semaine, année fiscale, etc.)
-    // --------------------------------------------------------------------------------------------
+    // CrÃ©ation du calendrier contenant toutes les dates
+    // et load antÃ©rieur afin de dÃ©finir les champs en lien
+    // avec les dates
     Calendrier:
     Load 
-        TempDate as [$(vChampDateCalendrier)],
-        Month(TempDate) as Mois,
-        Year(TempDate) as Année,
-        Day(TempDate) as Jour
-    Resident TempCalendrier;
-    Drop Table TempCalendrier;
+        AutoNumber(Date) as [$(vFieldDateKey)],
+        [Date] as [Date$(vFieldDateSuffix)],
+        Year([Date]) as [Annee$(vFieldDateSuffix)],
+        Month([Date]) as [Mois$(vFieldDateSuffix)]
+    ;
+    Load
+        Date($(vMinDate) + IterNo() - 1) as [Date]
+    AutoGenerate 1 While $(vMinDate) + IterNo() - 1 <= $(vMaxDate);
 
-    // --------------------------------------------------------------------------------------------
-    // Destruction des variables temporaires
-    // --------------------------------------------------------------------------------------------
-    Set vMinDate=;
-    Set vMaxDate=;
-
+    // DÃ©truire les variables temporaire
+    Let vMinDate =;
+    Let vMaxDate =;
 End Sub;
